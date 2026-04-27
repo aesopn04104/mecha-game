@@ -25,6 +25,16 @@ function generateEnemies() {
     }
 }
 
+function dropEquipment() {
+    if (Math.random() < 0.7) {
+        let item = clone(equipmentPool[Math.floor(Math.random() * equipmentPool.length)]);
+        inventory.push(item);
+        write(`你從戰場殘骸中回收了裝備：【${item.name}】`);
+    } else {
+        write("沒有發現可用裝備。");
+    }
+}
+
 function updateTargetUI() {
     const select = document.getElementById("targetSelect");
     const currentValue = select.value;
@@ -50,6 +60,7 @@ function restartGame() {
     battleOver = false;
     turn = 1;
     resources = 50;
+    inventory = [];
     log.innerText = "";
 
     document.getElementById("actions").style.display = "grid";
@@ -114,6 +125,7 @@ function checkBattleEnd() {
 
         write("敵方全滅。");
         write(`獲得資源 ${reward}`);
+        dropEquipment();
         enterBase();
         updateUI();
         return true;
@@ -142,10 +154,6 @@ function attackSelectedTarget() {
 
     let restBonus = player.restBonus || 0;
     let chance = calcHit(player, target) + restBonus;
-
-    if (restBonus > 0) {
-        write(`休息加成 ${restBonus}%`);
-    }
 
     if (isHit(chance)) {
         let dmg = dealDamage(14, 24);
@@ -234,6 +242,19 @@ function restPilot() {
     player.state = "休息後狀態穩定";
     write("休息完成：首回合+50%，每回合-10%。");
     updateUI();
+}
+
+function checkEquipment() {
+    write("\n=== 裝備列表 ===");
+
+    if (inventory.length === 0) {
+        write("目前沒有任何裝備。");
+        return;
+    }
+
+    inventory.forEach((item, index) => {
+        write(`${index+1}. ${item.name}（${item.type}） - ${item.description}`);
+    });
 }
 
 function enterBase() {
