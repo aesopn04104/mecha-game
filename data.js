@@ -48,22 +48,36 @@ const equipmentPool = [
     {
         name: "改良型步槍瞄準器",
         type: "武器配件",
-        description: "提升射擊穩定性的瞄準模組。"
+        description: "大量增加命中率，少量增加攻擊力。",
+        statRanges: {
+            hitBonus: [8, 12],
+            damageBonus: [1, 3]
+        }
     },
     {
         name: "強化關節護板",
         type: "防護裝備",
-        description: "可降低關節部位受損風險的外掛護板。"
+        description: "增加機體耐久。",
+        statRanges: {
+            maxHpBonus: [10, 25]
+        }
     },
     {
         name: "輕量化推進噴口",
         type: "推進裝備",
-        description: "提高短距離機動反應的推進組件。"
+        description: "增加機動力，少量增加命中率。",
+        statRanges: {
+            mobilityBonus: [2, 5],
+            hitBonus: [2, 5]
+        }
     },
     {
         name: "備用感測器組件",
         type: "感測裝備",
-        description: "可用於替換受損雷達與光學輔助模組。"
+        description: "中量增加命中率。",
+        statRanges: {
+            hitBonus: [5, 9]
+        }
     }
 ];
 
