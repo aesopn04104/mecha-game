@@ -1,6 +1,5 @@
 const log = document.getElementById("log");
 
-// ⭐ 修復：全域狀態
 let player;
 let allies = [];
 let enemies = [];
@@ -31,27 +30,31 @@ function generateAllies() {
     });
 
     allies = roster.slice(0, 4);
-
-    availableRecruits = recruitPool.map(r => {
-        let unit = clone(r);
-        setupBaseStats(unit);
-        return unit;
-    });
 }
 
-// ⭐ 修正敵人數量：小隊+2
 function generateEnemies() {
     enemies = [];
 
     let teamSize = allies.length + 1;
-    let maxEnemies = teamSize + 2;
+    let maxEnemies = Math.max(3, teamSize + 2); // ⭐ 保底
 
     let count = Math.floor(Math.random() * maxEnemies) + 1;
 
     for (let i = 0; i < count; i++) {
+        if (!defaultEnemy) continue;
+
         let enemy = clone(defaultEnemy);
         enemy.id = `enemy-${Date.now()}-${i}`;
         enemy.name = `敵機-${i + 1}`;
+        setupBaseStats(enemy);
+        enemies.push(enemy);
+    }
+
+    // ⭐ 防止完全沒有敵人
+    if (enemies.length === 0 && defaultEnemy) {
+        let enemy = clone(defaultEnemy);
+        enemy.id = `enemy-fallback`;
+        enemy.name = `敵機-備用`;
         setupBaseStats(enemy);
         enemies.push(enemy);
     }
@@ -59,6 +62,8 @@ function generateEnemies() {
 
 function renderAllyStatus() {
     const el = document.getElementById("allyStatus");
+    if (!el) return;
+
     el.innerHTML = `上陣：${allies.length}/4<br>`;
 
     [player, ...allies].forEach(unit => {
@@ -70,6 +75,8 @@ function renderAllyStatus() {
 
 function renderEnemyStatus() {
     const el = document.getElementById("enemyStatus");
+    if (!el) return;
+
     el.innerHTML = "";
 
     enemies.forEach(enemy => {
@@ -81,6 +88,8 @@ function renderEnemyStatus() {
 
 function updateTargetUI() {
     const select = document.getElementById("targetSelect");
+    if (!select) return;
+
     select.innerHTML = "";
 
     enemies.filter(e => e.hp > 0).forEach(enemy => {
@@ -92,10 +101,11 @@ function updateTargetUI() {
 }
 
 function updateUI() {
-    document.getElementById("playerHp").innerText =
-        `${Math.max(0, player.hp)}/${player.maxHp}`;
+    const hpEl = document.getElementById("playerHp");
+    if (hpEl) hpEl.innerText = `${Math.max(0, player.hp)}/${player.maxHp}`;
 
-    document.getElementById("resources").innerText = resources;
+    const resEl = document.getElementById("resources");
+    if (resEl) resEl.innerText = resources;
 
     renderAllyStatus();
     renderEnemyStatus();
@@ -105,7 +115,7 @@ function updateUI() {
 function attackSelectedTarget() {
     if (battleOver) return;
 
-    const targetId = document.getElementById("targetSelect").value;
+    const targetId = document.getElementById("targetSelect")?.value;
     const target = enemies.find(e => e.id === targetId && e.hp > 0);
 
     if (!target) {
@@ -122,7 +132,6 @@ function attackSelectedTarget() {
     updateUI();
 }
 
-// ⭐ 修正AI：隨機打全隊
 function enemyTurn() {
     let targets = [player, ...allies].filter(u => u.hp > 0);
 
@@ -138,13 +147,8 @@ function enemyTurn() {
     });
 }
 
-function toggleRecruitPanel() {
-    const panel = document.getElementById("recruitPanel");
-    panel.style.display =
-        panel.style.display === "none" ? "block" : "none";
-}
-
 function write(text) {
+    if (!log) return;
     log.innerText += text + "\n";
 }
 
@@ -157,7 +161,7 @@ function restartGame() {
 
     battleOver = false;
     resources = 50;
-    log.innerText = "";
+    if (log) log.innerText = "";
 
     document.getElementById("actions").style.display = "grid";
     document.getElementById("baseActions").style.display = "none";
@@ -166,4 +170,7 @@ function restartGame() {
     updateUI();
 }
 
-restartGame();
+// ⭐ 確保 DOM 載入後才執行
+window.onload = function() {
+    restartGame();
+};
