@@ -283,22 +283,7 @@ write(`消耗資源 ${repairCost}，剩餘資源 ${resources}。`);
 
 updateUI();
 }
-if (!battleOver) {
-write("現在還在戰鬥中，無法維修。");
-return;
-}
 
-let before = player.hp;
-let repairAmount = 30;
-
-player.hp = Math.min(player.maxHp, player.hp + repairAmount);
-player.state = "已維修";
-
-write("");
-write(`維修班替你的機體重新固定受損部件。HP 從 ${before} 回復到 ${player.hp}。`);
-
-updateUI();
-}
 function enterBase() {
 setActionButtons(true);
 
