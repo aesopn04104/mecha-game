@@ -25,15 +25,15 @@ log.scrollTop = log.scrollHeight;
 }
 
 function updateUI() {
+document.getElementById("playerHp").innerText = `${Math.max(player.hp, 0)} / ${player.maxHp}`;
+document.getElementById("enemyHp").innerText = `${Math.max(enemy.hp, 0)} / ${enemy.maxHp}`;
+
 document.getElementById("playerState").innerText = player.state;
 document.getElementById("enemyState").innerText = enemy.state;
 document.getElementById("resources").innerText = resources;
 
 document.getElementById("playerHpBar").style.width = `${Math.max(player.hp, 0) / player.maxHp * 100}%`;
 document.getElementById("enemyHpBar").style.width = `${Math.max(enemy.hp, 0) / enemy.maxHp * 100}%`;
-
-document.getElementById("playerState").innerText = player.state;
-document.getElementById("enemyState").innerText = enemy.state;
 }
 
 function setActionButtons(disabled) {
