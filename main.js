@@ -1,5 +1,20 @@
 const log = document.getElementById("log");
 
+const statNameMap = {
+    attackBonus: "攻擊",
+    defenseBonus: "防禦",
+    hitBonus: "命中",
+    evasionBonus: "閃避",
+    maxHpBonus: "耐久"
+};
+
+const slotNameMap = {
+    armor: "裝甲",
+    weapon: "武器",
+    propulsion: "推進",
+    aim: "瞄準"
+};
+
 function clone(obj) {
     return JSON.parse(JSON.stringify(obj));
 }
@@ -42,10 +57,16 @@ function applyEquipmentStats(unit) {
     });
 }
 
+function formatStatValue(key, value) {
+    let name = statNameMap[key] || key;
+    let sign = value > 0 ? "+" : "";
+    return `${name}${sign}${value}`;
+}
+
 function formatItemStats(item) {
     return Object.entries(item.stats || {})
-        .map(([k, v]) => `${k}+${v}`)
-        .join(", ");
+        .map(([k, v]) => formatStatValue(k, v))
+        .join("，");
 }
 
 function calcDamage(attacker, target) {
@@ -219,7 +240,16 @@ function renderEquipmentUI() {
 
     Object.entries(player.equipped).forEach(([slot, item]) => {
         let line = document.createElement("div");
-        line.innerText = `${slot}: ${item ? item.name + " (" + formatItemStats(item) + ")" : "無"}`;
+        let slotName = slotNameMap[slot] || slot;
+        line.innerText = `${slotName}: ${item ? item.name + " (" + formatItemStats(item) + ")" : "無"} `;
+
+        if (item) {
+            let btn = document.createElement("button");
+            btn.innerText = "解除";
+            btn.onclick = () => unequipItem(slot);
+            line.appendChild(btn);
+        }
+
         equippedDiv.appendChild(line);
     });
 
@@ -234,7 +264,8 @@ function renderEquipmentUI() {
 
     inventory.forEach((item, index) => {
         let btn = document.createElement("button");
-        btn.innerText = `${item.name} [${item.category}] (${formatItemStats(item)})`;
+        let categoryName = slotNameMap[item.category] || item.category;
+        btn.innerText = `${item.name} [${categoryName}] (${formatItemStats(item)})`;
         btn.onclick = () => equipItem(index);
         inventoryDiv.appendChild(btn);
     });
@@ -268,6 +299,18 @@ function equipItem(index) {
     applyEquipmentStats(player);
     write(`裝備成功：${item.name}`);
 
+    renderEquipmentUI();
+    updateUI();
+}
+
+function unequipItem(slot) {
+    if (!player.equipped || !player.equipped[slot]) return;
+
+    let itemName = player.equipped[slot].name;
+    player.equipped[slot] = null;
+    applyEquipmentStats(player);
+
+    write(`已解除${slotNameMap[slot] || slot}裝備：${itemName}`);
     renderEquipmentUI();
     updateUI();
 }
