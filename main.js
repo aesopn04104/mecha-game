@@ -4,9 +4,31 @@ function clone(obj) {
     return JSON.parse(JSON.stringify(obj));
 }
 
+function generateAllies() {
+    allies = [];
+    allyTemplates.forEach(template => {
+        allies.push(clone(template));
+    });
+}
+
+function generateEnemies() {
+    enemies = [];
+    let baseCount = allies.length + 1; // 玩家+隊友
+    let variation = Math.floor(Math.random() * 5) - 2; // -2~+2
+    let count = Math.max(1, baseCount + variation);
+
+    for (let i = 0; i < count; i++) {
+        let enemy = clone(defaultEnemy);
+        enemy.name = `敵機-${i+1}`;
+        enemies.push(enemy);
+    }
+}
+
 function restartGame() {
     player = clone(defaultPlayer);
-    enemy = clone(defaultEnemy);
+    generateAllies();
+    generateEnemies();
+
     battleOver = false;
     turn = 1;
     resources = 50;
@@ -15,7 +37,7 @@ function restartGame() {
     document.getElementById("actions").style.display = "grid";
     document.getElementById("baseActions").style.display = "none";
 
-    write("你坐在聯邦量產機的駕駛艙內，前方街口被煙塵遮住。敵方機體停在斷牆後。");
+    write(`小隊人數：${allies.length + 1}，敵方偵測數量：約 ${enemies.length}。`);
     write("戰鬥開始。");
 
     updateUI();
@@ -27,116 +49,105 @@ function write(text) {
     log.scrollTop = log.scrollHeight;
 }
 
+function getAliveEnemies() {
+    return enemies.filter(e => e.hp > 0);
+}
+
+function getAliveAllies() {
+    return [player, ...allies].filter(a => a.hp > 0);
+}
+
 function updateUI() {
     document.getElementById("playerHp").innerText = `${Math.max(player.hp, 0)} / ${player.maxHp}`;
-    document.getElementById("enemyHp").innerText = `${Math.max(enemy.hp, 0)} / ${enemy.maxHp}`;
     document.getElementById("playerState").innerText = player.state;
-    document.getElementById("enemyState").innerText = enemy.state;
     document.getElementById("resources").innerText = resources;
 }
 
-function setActionButtons(disabled) {
-    document.querySelectorAll("#actions button").forEach(btn => {
-        if (btn.innerText !== "重新開始") btn.disabled = disabled;
-    });
-}
-
 function checkBattleEnd() {
-    if (enemy.hp <= 0) {
+    if (getAliveEnemies().length === 0) {
         battleOver = true;
-        let reward = 35;
+        let reward = 30 + enemies.length * 5;
         resources += reward;
 
-        write("敵機被擊毀。");
+        write("敵方全滅。");
         write(`獲得資源 ${reward}`);
         enterBase();
-        updateUI();
         return true;
     }
 
     if (player.hp <= 0) {
         battleOver = true;
         write("你被擊敗。");
-        setActionButtons(true);
-        updateUI();
         return true;
     }
 
     return false;
 }
 
-function getRestHitBonus() {
-    return player.restBonus || 0;
-}
-
-function reduceRestHitBonus() {
-    if (!player.restBonus) return;
-
-    player.restBonus = Math.max(0, player.restBonus - 10);
-
-    if (player.restBonus <= 0) {
-        player.restBonus = 0;
-        player.rested = false;
-        write("休息帶來的專注感已經消退。");
-    } else {
-        write(`休息效果下降，目前命中加成剩餘 ${player.restBonus}%。`);
-    }
-}
-
 function attack() {
     if (battleOver) return;
 
-    let restBonus = getRestHitBonus();
-    let chance = calcHit(player, enemy) + restBonus;
+    let target = getAliveEnemies()[0];
+
+    let restBonus = player.restBonus || 0;
+    let chance = calcHit(player, target) + restBonus;
 
     if (restBonus > 0) {
-        write(`休息讓你的瞄準更穩，本回合命中增加 ${restBonus}%。`);
+        write(`休息加成 ${restBonus}%`);
     }
 
     if (isHit(chance)) {
         let dmg = dealDamage(14, 24);
-        enemy.hp -= dmg;
-        write(`命中，造成 ${dmg}`);
+        target.hp -= dmg;
+        write(`你命中 ${target.name}，造成 ${dmg}`);
     } else {
         write("未命中");
     }
 
-    reduceRestHitBonus();
+    if (player.restBonus) {
+        player.restBonus = Math.max(0, player.restBonus - 10);
+    }
+
+    alliesTurn();
     enemyTurn();
     checkBattleEnd();
     updateUI();
 }
 
-function defend() {
-    player.defending = true;
-    write("進入防禦");
-    reduceRestHitBonus();
-    enemyTurn();
-    checkBattleEnd();
-    updateUI();
-}
+function alliesTurn() {
+    getAliveAllies().forEach(unit => {
+        if (unit === player) return;
 
-function observe() {
-    player.aimBonus = 15;
-    write("觀察敵人");
-    reduceRestHitBonus();
-    enemyTurn();
-    checkBattleEnd();
-    updateUI();
+        let target = getAliveEnemies()[0];
+        if (!target) return;
+
+        let chance = calcHit(unit, target);
+        if (isHit(chance)) {
+            let dmg = dealDamage(8, 16);
+            target.hp -= dmg;
+            write(`${unit.name} 命中 ${target.name} (${dmg})`);
+        } else {
+            write(`${unit.name} 未命中`);
+        }
+    });
 }
 
 function enemyTurn() {
-    if (battleOver) return;
+    getAliveEnemies().forEach(enemy => {
+        let targetPool = getAliveAllies();
+        if (targetPool.length === 0) return;
 
-    let chance = calcHit(enemy, player);
+        let target = targetPool[Math.floor(Math.random() * targetPool.length)];
 
-    if (isHit(chance)) {
-        let dmg = dealDamage(10, 20);
-        player.hp -= dmg;
-        write(`敵人命中你 ${dmg}`);
-    } else {
-        write("敵人未命中");
-    }
+        let chance = calcHit(enemy, target);
+        if (isHit(chance)) {
+            let dmg = dealDamage(10, 20);
+            target.hp -= dmg;
+            write(`${enemy.name} 命中 ${target.name} (${dmg})`);
+        } else {
+            write(`${enemy.name} 未命中`);
+        }
+    });
 }
 
 function goToBase() {
@@ -160,10 +171,9 @@ function repairMech() {
 }
 
 function restPilot() {
-    player.rested = true;
     player.restBonus = 50;
     player.state = "休息後狀態穩定";
-    write("你休息了一會。下一場戰鬥首回合命中增加 50%，之後每回合減少 10%。");
+    write("休息完成：首回合+50%，每回合-10%。");
     updateUI();
 }
 
@@ -173,13 +183,13 @@ function enterBase() {
 }
 
 function startNextMission() {
-    enemy = clone(defaultEnemy);
+    generateEnemies();
     battleOver = false;
 
     document.getElementById("actions").style.display = "grid";
     document.getElementById("baseActions").style.display = "none";
 
-    write("下一場戰鬥開始");
+    write(`敵方出現數量：約 ${enemies.length}`);
     updateUI();
 }
 
