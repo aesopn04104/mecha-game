@@ -147,4 +147,31 @@ function updateUI() {
     renderEnemyStatus();
     updateTargetUI();
 }
+function renderEnemyStatus() {
+    const el = document.getElementById("enemyStatus");
+    if (!el) return;
+
+    el.innerHTML = "";
+
+    enemies.forEach(enemy => {
+        let div = document.createElement("div");
+        div.innerText = `${enemy.name} HP:${enemy.hp}/${enemy.maxHp}`;
+        el.appendChild(div);
+    });
+}
+
+function updateTargetUI() {
+    const select = document.getElementById("targetSelect");
+    if (!select) return;
+
+    select.innerHTML = "";
+
+    enemies.filter(e => e.hp > 0).forEach(enemy => {
+        let option = document.createElement("option");
+        option.value = enemy.id;
+        option.text = `${enemy.name} (${enemy.hp})`;
+        select.appendChild(option);
+    });
+}
 restartGame();
+
