@@ -20,6 +20,31 @@ function generateEquipmentStats(template) {
     return stats;
 }
 
+function applyEquipmentStats(unit) {
+    unit.attack = unit.baseAttack || unit.attack;
+    unit.defense = unit.baseDefense || unit.defense;
+    unit.hit = unit.baseHit || unit.hit;
+    unit.evasion = unit.baseEvasion || unit.evasion;
+
+    if (!unit.equipped) return;
+
+    Object.values(unit.equipped).forEach(item => {
+        if (!item || !item.stats) return;
+
+        unit.attack += item.stats.attackBonus || 0;
+        unit.defense += item.stats.defenseBonus || 0;
+        unit.hit += item.stats.hitBonus || 0;
+        unit.evasion += item.stats.evasionBonus || 0;
+    });
+}
+
+function setupBaseStats(unit) {
+    unit.baseAttack = unit.attack;
+    unit.baseDefense = unit.defense;
+    unit.baseHit = unit.hit;
+    unit.baseEvasion = unit.evasion || 0;
+}
+
 function calcDamage(attacker, target) {
     let baseAttack = attacker.attack || 0;
     let defense = target.defense || 0;
@@ -35,10 +60,16 @@ function calcDamage(attacker, target) {
     };
 }
 
+function calcFinalHit(attacker, target) {
+    return calcHit(attacker, target) - (target.evasion || 0);
+}
+
 function generateAllies() {
     allies = [];
     allyTemplates.forEach(template => {
-        allies.push(clone(template));
+        let ally = clone(template);
+        setupBaseStats(ally);
+        allies.push(ally);
     });
 }
 
@@ -70,6 +101,7 @@ function generateEnemies() {
         let enemy = clone(defaultEnemy);
         enemy.id = `enemy-${Date.now()}-${i}`;
         enemy.name = `敵機-${i+1}`;
+        setupBaseStats(enemy);
         enemies.push(enemy);
     }
 }
@@ -111,6 +143,8 @@ function updateTargetUI() {
 
 function restartGame() {
     player = clone(defaultPlayer);
+    setupBaseStats(player);
+    applyEquipmentStats(player);
     generateAllies();
     generateEnemies();
 
@@ -148,7 +182,7 @@ function renderAllyStatus() {
 
     [player, ...allies].forEach(unit => {
         let div = document.createElement("div");
-        div.innerText = `${unit.name} | HP: ${Math.max(unit.hp,0)}/${unit.maxHp}`;
+        div.innerText = `${unit.name} | HP: ${Math.max(unit.hp,0)}/${unit.maxHp} | 攻:${unit.attack} 防:${unit.defense} 命:${unit.hit} 閃:${unit.evasion || 0}`;
         el.appendChild(div);
     });
 }
@@ -159,7 +193,7 @@ function renderEnemyStatus() {
 
     enemies.forEach(enemy => {
         let div = document.createElement("div");
-        div.innerText = `${enemy.name} | HP: ${Math.max(enemy.hp,0)}/${enemy.maxHp}`;
+        div.innerText = `${enemy.name} | HP: ${Math.max(enemy.hp,0)}/${enemy.maxHp} | 攻:${enemy.attack} 防:${enemy.defense} 命:${enemy.hit} 閃:${enemy.evasion || 0}`;
         el.appendChild(div);
     });
 }
@@ -199,6 +233,12 @@ function checkBattleEnd() {
     return false;
 }
 
+function formatItemStats(item) {
+    return Object.entries(item.stats || {})
+        .map(([k,v]) => `${k}+${v}`)
+        .join(", ");
+}
+
 function checkEquipment() {
     write("\n=== 裝備列表 ===");
 
@@ -208,12 +248,31 @@ function checkEquipment() {
     }
 
     inventory.forEach((item, index) => {
-        let statText = Object.entries(item.stats || {})
-            .map(([k,v]) => `${k}+${v}`)
-            .join(", ");
-
-        write(`${index+1}. ${item.name} (${statText})`);
+        write(`${index+1}. ${item.name} [${item.category}] (${formatItemStats(item)})`);
     });
+
+    write("\n=== 已裝備 ===");
+    Object.entries(player.equipped).forEach(([slot, item]) => {
+        write(`${slot}: ${item ? item.name + " (" + formatItemStats(item) + ")" : "無"}`);
+    });
+}
+
+function autoEquipItem(item) {
+    if (!item || !item.category) return;
+
+    if (item.category === "aim" && player.equipped.weapon && player.equipped.weapon.blocksAim) {
+        write(`【${item.name}】無法裝備：目前武器為大刀，不能使用瞄準分類。`);
+        return;
+    }
+
+    if (item.category === "weapon" && item.blocksAim) {
+        player.equipped.aim = null;
+        write("裝備大刀後，瞄準分類裝備已自動卸下。");
+    }
+
+    player.equipped[item.category] = item;
+    applyEquipmentStats(player);
+    write(`已自動裝備：【${item.name}】`);
 }
 
 function attackSelectedTarget() {
@@ -228,7 +287,7 @@ function attackSelectedTarget() {
     }
 
     let restBonus = player.restBonus || 0;
-    let chance = calcHit(player, target) + restBonus + (player.aimBonus || 0);
+    let chance = calcFinalHit(player, target) + restBonus + (player.aimBonus || 0);
 
     if (isHit(chance)) {
         let result = calcDamage(player, target);
@@ -270,7 +329,7 @@ function alliesTurn() {
         let target = getAliveEnemies()[0];
         if (!target) return;
 
-        let chance = calcHit(unit, target);
+        let chance = calcFinalHit(unit, target);
         if (isHit(chance)) {
             let result = calcDamage(unit, target);
             target.hp -= result.damage;
@@ -288,7 +347,7 @@ function enemyTurn() {
 
         let target = targetPool[Math.floor(Math.random() * targetPool.length)];
 
-        let chance = calcHit(enemy, target);
+        let chance = calcFinalHit(enemy, target);
         if (isHit(chance)) {
             let result = calcDamage(enemy, target);
             target.hp -= result.damage;
