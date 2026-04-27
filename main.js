@@ -22,10 +22,8 @@ function generateAllies() {
         roster.push(ally);
     });
 
-    // 初始上陣最多4人
     allies = roster.slice(0, 4);
 
-    // 初始化可招募名單
     availableRecruits = recruitPool.map(r => {
         let unit = clone(r);
         setupBaseStats(unit);
@@ -33,10 +31,8 @@ function generateAllies() {
     });
 }
 
-// === 招募 UI ===
 function toggleRecruitPanel() {
     const panel = document.getElementById("recruitPanel");
-
     if (panel.style.display === "none") {
         panel.style.display = "block";
         renderRecruitUI();
@@ -80,7 +76,6 @@ function recruitUnit(index) {
     updateUI();
 }
 
-// === UI ===
 function renderAllyStatus() {
     const el = document.getElementById("allyStatus");
     el.innerHTML = `上陣：${allies.length}/4<br>`;
@@ -92,7 +87,6 @@ function renderAllyStatus() {
     });
 }
 
-// === 其他保持原邏輯 ===
 function generateEnemies() {
     enemies = [];
     let count = Math.floor(Math.random() * 7) + 1;
@@ -136,17 +130,14 @@ function getAliveAllies() {
 }
 
 function updateUI() {
-    document.getElementById("playerHp").innerText =
-        `${player.hp}/${player.maxHp}`;
-
+    document.getElementById("playerHp").innerText = `${player.hp}/${player.maxHp}`;
     document.getElementById("resources").innerText = resources;
 
     renderAllyStatus();
-
-    // 👉 加這兩行（關鍵）
     renderEnemyStatus();
     updateTargetUI();
 }
+
 function renderEnemyStatus() {
     const el = document.getElementById("enemyStatus");
     if (!el) return;
@@ -173,5 +164,65 @@ function updateTargetUI() {
         select.appendChild(option);
     });
 }
-restartGame();
 
+// ⭐ 補上缺失戰鬥系統
+function attackSelectedTarget() {
+    if (battleOver) return;
+
+    const targetId = document.getElementById("targetSelect").value;
+    const target = enemies.find(e => e.id === targetId && e.hp > 0);
+
+    if (!target) {
+        write("沒有有效目標");
+        return;
+    }
+
+    if (Math.random() < 0.7) {
+        let dmg = Math.max(0, player.attack - target.defense);
+        target.hp -= dmg;
+        write(`你命中 ${target.name} (${dmg})`);
+    } else {
+        write("未命中");
+    }
+
+    updateUI();
+
+    if (checkBattleEnd()) return;
+
+    enemyTurn();
+
+    checkBattleEnd();
+    updateUI();
+}
+
+function enemyTurn() {
+    enemies.forEach(enemy => {
+        if (enemy.hp <= 0) return;
+
+        if (Math.random() < 0.6) {
+            let dmg = Math.max(0, enemy.attack - player.defense);
+            player.hp -= dmg;
+            write(`${enemy.name} 命中你 (${dmg})`);
+        } else {
+            write(`${enemy.name} 未命中`);
+        }
+    });
+}
+
+function checkBattleEnd() {
+    if (enemies.every(e => e.hp <= 0)) {
+        write("敵方全滅");
+        battleOver = true;
+        return true;
+    }
+
+    if (player.hp <= 0) {
+        write("你被擊敗");
+        battleOver = true;
+        return true;
+    }
+
+    return false;
+}
+
+restartGame();
