@@ -22,3 +22,4 @@ let player = {};
 let enemy = {};
 let battleOver = false;
 let turn = 1;
+let resources = 50;
