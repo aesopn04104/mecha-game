@@ -235,8 +235,9 @@ if (Math.random() < 0.6) {
 battleOver = true;
 write("敵方機體拖著受損機體撤離戰場。");
 write("戰鬥結束：敵方撤退。");
-setActionButtons(true);
-} else {
+enterBase();
+}
+else {
 write("敵方機體試圖撤離，但沒有成功。");
 }
 }
@@ -248,8 +249,7 @@ write("");
 write("你選擇撤回基地。機體拖著受損的步伐離開街口，通訊裡只剩下低沉的雜音。");
 write("你回到臨時整備區。這裡沒有真正的安全，只有短暫喘息。");
 
-document.getElementById("actions").style.display = "none";
-document.getElementById("baseActions").style.display = "grid";
+enterBase();
 }
 function repairMech() {
 if (!battleOver) {
@@ -267,5 +267,14 @@ write("");
 write(`維修班替你的機體重新固定受損部件。HP 從 ${before} 回復到 ${player.hp}。`);
 
 updateUI();
+}
+function enterBase() {
+setActionButtons(true);
+
+document.getElementById("actions").style.display = "none";
+document.getElementById("baseActions").style.display = "grid";
+
+write("");
+write("交火結束後，小隊撤回臨時整備區。維修燈一盞盞亮起，受損機體被拖進檢查位。");
 }
 restartGame();
