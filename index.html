@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>Mecha Game</title>
-<link rel="stylesheet" href="style.css?v=20260427-3">
+<link rel="stylesheet" href="style.css?v=20260427-4">
 </head>
 <body>
 
@@ -29,6 +29,13 @@
   </div>
 </div>
 
+<div id="equipmentPanel" class="unit" style="display:none;">
+  <h2>裝備管理</h2>
+  <div id="equippedStatus"></div>
+  <hr>
+  <div id="inventoryList"></div>
+</div>
+
 <div id="log"></div>
 
 <div id="actions">
@@ -37,22 +44,20 @@
 <button onclick="defend()">防禦</button>
 <button onclick="observe()">觀察</button>
 <button onclick="goToBase()">撤回基地</button>
+<button onclick="restartGame()">重新開始</button>
 </div>
 
 <div id="baseActions" style="display:none;">
 <button onclick="repairMech()">維修</button>
 <button onclick="restPilot()">休息</button>
-<button onclick="openRecruit()">招募隊友</button>
-<button onclick="openTeam()">上陣設定</button>
+<button onclick="talkToNpc()">與三號交流</button>
+<button onclick="toggleEquipmentPanel()">裝備管理</button>
 <button onclick="startNextMission()">出擊</button>
 </div>
 
-<div id="recruitPanel" style="display:none;"></div>
-<div id="teamPanel" style="display:none;"></div>
-
-<script src="data.js?v=20260427-3"></script>
-<script src="combat.js?v=20260427-3"></script>
-<script src="main.js?v=20260427-3"></script>
+<script src="data.js?v=20260427-4"></script>
+<script src="combat.js?v=20260427-4"></script>
+<script src="main.js?v=20260427-4"></script>
 
 </body>
 </html>
