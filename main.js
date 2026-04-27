@@ -28,10 +28,10 @@ function updateTargetUI() {
     const select = document.getElementById("targetSelect");
     select.innerHTML = "";
 
-    getAliveEnemies().forEach((enemy, index) => {
+    getAliveEnemies().forEach(enemy => {
         let option = document.createElement("option");
-        option.value = index;
-        option.text = `${enemy.name} (${enemy.hp}/${enemy.maxHp})`;
+        option.value = enemy.id;
+        option.text = `${enemy.name} (${Math.max(enemy.hp, 0)}/${enemy.maxHp})`;
         select.appendChild(option);
     });
 }
@@ -100,15 +100,46 @@ function updateUI() {
     updateTargetUI();
 }
 
+function checkBattleEnd() {
+    if (getAliveEnemies().length === 0) {
+        battleOver = true;
+        let reward = 30 + enemies.length * 5;
+        resources += reward;
+
+        write("敵方全滅。");
+        write(`獲得資源 ${reward}`);
+        enterBase();
+        updateUI();
+        return true;
+    }
+
+    if (player.hp <= 0) {
+        battleOver = true;
+        write("你被擊敗。");
+        updateUI();
+        return true;
+    }
+
+    return false;
+}
+
 function attackSelectedTarget() {
     if (battleOver) return;
 
-    const index = document.getElementById("targetSelect").value;
-    const target = getAliveEnemies()[index];
-    if (!target) return;
+    const targetId = document.getElementById("targetSelect").value;
+    const target = enemies.find(enemy => enemy.id === targetId && enemy.hp > 0);
+    if (!target) {
+        write("沒有有效目標。");
+        updateUI();
+        return;
+    }
 
     let restBonus = player.restBonus || 0;
     let chance = calcHit(player, target) + restBonus;
+
+    if (restBonus > 0) {
+        write(`休息加成 ${restBonus}%`);
+    }
 
     if (isHit(chance)) {
         let dmg = dealDamage(14, 24);
@@ -122,7 +153,15 @@ function attackSelectedTarget() {
         player.restBonus = Math.max(0, player.restBonus - 10);
     }
 
+    updateUI();
+
+    if (checkBattleEnd()) return;
+
     alliesTurn();
+    updateUI();
+
+    if (checkBattleEnd()) return;
+
     enemyTurn();
     checkBattleEnd();
     updateUI();
