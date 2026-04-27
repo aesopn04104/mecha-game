@@ -182,13 +182,123 @@ function checkEquipment() {
     });
 }
 
-function attackSelectedTarget() { /* 保持原樣 */ }
-function alliesTurn() { /* 保持原樣 */ }
-function enemyTurn() { /* 保持原樣 */ }
-function goToBase() { /* 保持原樣 */ }
-function repairMech() { /* 保持原樣 */ }
-function restPilot() { /* 保持原樣 */ }
-function enterBase() { /* 保持原樣 */ }
-function startNextMission() { /* 保持原樣 */ }
+function attackSelectedTarget() {
+    if (battleOver) return;
+
+    const targetId = document.getElementById("targetSelect").value;
+    const target = enemies.find(enemy => enemy.id === targetId && enemy.hp > 0);
+    if (!target) {
+        write("沒有有效目標。");
+        updateUI();
+        return;
+    }
+
+    let restBonus = player.restBonus || 0;
+    let chance = calcHit(player, target) + restBonus;
+
+    if (isHit(chance)) {
+        let dmg = dealDamage(14, 24);
+        target.hp -= dmg;
+        write(`你命中 ${target.name}，造成 ${dmg}`);
+    } else {
+        write("未命中");
+    }
+
+    if (player.restBonus) {
+        player.restBonus = Math.max(0, player.restBonus - 10);
+    }
+
+    updateUI();
+
+    if (checkBattleEnd()) return;
+
+    alliesTurn();
+    updateUI();
+
+    if (checkBattleEnd()) return;
+
+    enemyTurn();
+    checkBattleEnd();
+    updateUI();
+}
+
+function alliesTurn() {
+    getAliveAllies().forEach(unit => {
+        if (unit === player) return;
+
+        let target = getAliveEnemies()[0];
+        if (!target) return;
+
+        let chance = calcHit(unit, target);
+        if (isHit(chance)) {
+            let dmg = dealDamage(8, 16);
+            target.hp -= dmg;
+            write(`${unit.name} 命中 ${target.name} (${dmg})`);
+        } else {
+            write(`${unit.name} 未命中`);
+        }
+    });
+}
+
+function enemyTurn() {
+    getAliveEnemies().forEach(enemy => {
+        let targetPool = getAliveAllies();
+        if (targetPool.length === 0) return;
+
+        let target = targetPool[Math.floor(Math.random() * targetPool.length)];
+
+        let chance = calcHit(enemy, target);
+        if (isHit(chance)) {
+            let dmg = dealDamage(10, 20);
+            target.hp -= dmg;
+            write(`${enemy.name} 命中 ${target.name} (${dmg})`);
+        } else {
+            write(`${enemy.name} 未命中`);
+        }
+    });
+}
+
+function goToBase() {
+    battleOver = true;
+    enterBase();
+}
+
+function repairMech() {
+    if (!battleOver) return;
+
+    if (resources < 20) {
+        write("資源不足");
+        return;
+    }
+
+    resources -= 20;
+    player.hp = Math.min(player.maxHp, player.hp + 30);
+
+    write("維修完成");
+    updateUI();
+}
+
+function restPilot() {
+    player.restBonus = 50;
+    player.state = "休息後狀態穩定";
+    write("休息完成：首回合+50%，每回合-10%。");
+    updateUI();
+}
+
+function enterBase() {
+    document.getElementById("actions").style.display = "none";
+    document.getElementById("baseActions").style.display = "grid";
+}
+
+function startNextMission() {
+    generateEnemies();
+    battleOver = false;
+
+    document.getElementById("actions").style.display = "grid";
+    document.getElementById("baseActions").style.display = "none";
+
+    write(`敵方出現數量：約 ${enemies.length}`);
+    updateUI();
+}
 
 restartGame();
