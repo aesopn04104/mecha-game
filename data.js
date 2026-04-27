@@ -25,7 +25,7 @@ const defaultPlayer = {
 
 const allyTemplates = [
     {
-        name: "二號機",
+        name: "顧霜",
         maxHp: 95,
         hp: 95,
         hit: 62,
@@ -37,7 +37,7 @@ const allyTemplates = [
         role: "重裝支援"
     },
     {
-        name: "三號機",
+        name: "陸謙",
         maxHp: 80,
         hp: 80,
         hit: 66,
@@ -47,6 +47,57 @@ const allyTemplates = [
         mobility: 11,
         state: "可作戰",
         role: "中距離步槍"
+    }
+];
+
+const recruitPool = [
+    {
+        name: "沈悠",
+        maxHp: 75,
+        hp: 75,
+        hit: 72,
+        attack: 18,
+        defense: 4,
+        evasion: 13,
+        mobility: 13,
+        state: "可作戰",
+        role: "精準射手"
+    },
+    {
+        name: "韓岳",
+        maxHp: 110,
+        hp: 110,
+        hit: 58,
+        attack: 24,
+        defense: 10,
+        evasion: 5,
+        mobility: 5,
+        state: "可作戰",
+        role: "重裝前衛"
+    },
+    {
+        name: "白芷",
+        maxHp: 85,
+        hp: 85,
+        hit: 68,
+        attack: 19,
+        defense: 6,
+        evasion: 12,
+        mobility: 12,
+        state: "可作戰",
+        role: "機動支援"
+    },
+    {
+        name: "羅震",
+        maxHp: 90,
+        hp: 90,
+        hit: 60,
+        attack: 27,
+        defense: 7,
+        evasion: 7,
+        mobility: 7,
+        state: "可作戰",
+        role: "近戰突擊"
     }
 ];
 
@@ -136,6 +187,7 @@ let player = {};
 let allies = [];
 let enemies = [];
 let inventory = [];
+let availableRecruits = [];
 let battleOver = false;
 let turn = 1;
 let resources = 50;
