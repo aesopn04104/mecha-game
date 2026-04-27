@@ -3,9 +3,12 @@ const defaultPlayer = {
     maxHp: 100,
     hp: 100,
     hit: 70,
+    attack: 24,
+    defense: 6,
     mobility: 10,
     state: "可作戰",
     aimBonus: 0,
+    varianceBonus: 0,
     defending: false,
     rested: false,
     restBonus: 0,
@@ -18,6 +21,8 @@ const allyTemplates = [
         maxHp: 95,
         hp: 95,
         hit: 62,
+        attack: 22,
+        defense: 8,
         mobility: 8,
         state: "可作戰",
         role: "重裝支援"
@@ -27,6 +32,8 @@ const allyTemplates = [
         maxHp: 80,
         hp: 80,
         hit: 66,
+        attack: 20,
+        defense: 5,
         mobility: 11,
         state: "可作戰",
         role: "中距離步槍"
@@ -38,6 +45,8 @@ const defaultEnemy = {
     maxHp: 80,
     hp: 80,
     hit: 60,
+    attack: 20,
+    defense: 5,
     mobility: 8,
     state: "警戒",
     type: "light",
@@ -57,9 +66,10 @@ const equipmentPool = [
     {
         name: "強化關節護板",
         type: "防護裝備",
-        description: "增加機體耐久。",
+        description: "增加機體耐久與防禦。",
         statRanges: {
-            maxHpBonus: [10, 25]
+            maxHpBonus: [10, 25],
+            defenseBonus: [1, 4]
         }
     },
     {
