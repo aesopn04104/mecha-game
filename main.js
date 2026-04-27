@@ -19,6 +19,7 @@ function generateEnemies() {
 
     for (let i = 0; i < count; i++) {
         let enemy = clone(defaultEnemy);
+        enemy.id = `enemy-${Date.now()}-${i}`;
         enemy.name = `敵機-${i+1}`;
         enemies.push(enemy);
     }
@@ -26,6 +27,7 @@ function generateEnemies() {
 
 function updateTargetUI() {
     const select = document.getElementById("targetSelect");
+    const currentValue = select.value;
     select.innerHTML = "";
 
     getAliveEnemies().forEach(enemy => {
@@ -34,6 +36,10 @@ function updateTargetUI() {
         option.text = `${enemy.name} (${Math.max(enemy.hp, 0)}/${enemy.maxHp})`;
         select.appendChild(option);
     });
+
+    if (currentValue && getAliveEnemies().some(enemy => enemy.id === currentValue)) {
+        select.value = currentValue;
+    }
 }
 
 function restartGame() {
