@@ -136,10 +136,15 @@ function getAliveAllies() {
 }
 
 function updateUI() {
-    document.getElementById("playerHp").innerText = `${player.hp}/${player.maxHp}`;
+    document.getElementById("playerHp").innerText =
+        `${player.hp}/${player.maxHp}`;
+
     document.getElementById("resources").innerText = resources;
 
     renderAllyStatus();
-}
 
+    // 👉 加這兩行（關鍵）
+    renderEnemyStatus();
+    updateTargetUI();
+}
 restartGame();
