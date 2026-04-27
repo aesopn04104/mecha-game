@@ -184,6 +184,7 @@ const equipmentPool = [
 ];
 
 let player = {};
+let roster = [];
 let allies = [];
 let enemies = [];
 let inventory = [];
