@@ -65,10 +65,33 @@ function checkBattleEnd() {
     return false;
 }
 
+function getRestHitBonus() {
+    return player.restBonus || 0;
+}
+
+function reduceRestHitBonus() {
+    if (!player.restBonus) return;
+
+    player.restBonus = Math.max(0, player.restBonus - 10);
+
+    if (player.restBonus <= 0) {
+        player.restBonus = 0;
+        player.rested = false;
+        write("休息帶來的專注感已經消退。");
+    } else {
+        write(`休息效果下降，目前命中加成剩餘 ${player.restBonus}%。`);
+    }
+}
+
 function attack() {
     if (battleOver) return;
 
-    let chance = calcHit(player, enemy);
+    let restBonus = getRestHitBonus();
+    let chance = calcHit(player, enemy) + restBonus;
+
+    if (restBonus > 0) {
+        write(`休息讓你的瞄準更穩，本回合命中增加 ${restBonus}%。`);
+    }
 
     if (isHit(chance)) {
         let dmg = dealDamage(14, 24);
@@ -78,6 +101,7 @@ function attack() {
         write("未命中");
     }
 
+    reduceRestHitBonus();
     enemyTurn();
     checkBattleEnd();
     updateUI();
@@ -86,6 +110,7 @@ function attack() {
 function defend() {
     player.defending = true;
     write("進入防禦");
+    reduceRestHitBonus();
     enemyTurn();
     checkBattleEnd();
     updateUI();
@@ -94,6 +119,7 @@ function defend() {
 function observe() {
     player.aimBonus = 15;
     write("觀察敵人");
+    reduceRestHitBonus();
     enemyTurn();
     checkBattleEnd();
     updateUI();
@@ -135,8 +161,9 @@ function repairMech() {
 
 function restPilot() {
     player.rested = true;
+    player.restBonus = 50;
     player.state = "休息後狀態穩定";
-    write("你休息了一會");
+    write("你休息了一會。下一場戰鬥首回合命中增加 50%，之後每回合減少 10%。");
     updateUI();
 }
 
