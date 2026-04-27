@@ -20,6 +20,21 @@ function generateEquipmentStats(template) {
     return stats;
 }
 
+function calcDamage(attacker, target) {
+    let baseAttack = attacker.attack || 0;
+    let defense = target.defense || 0;
+    let varianceRange = 0.3 + (attacker.varianceBonus || 0);
+    let variance = (Math.random() * 2 - 1) * varianceRange;
+    let finalAttack = Math.floor(baseAttack * (1 + variance));
+    let damage = Math.max(0, finalAttack - defense);
+
+    return {
+        damage: damage,
+        variance: variance,
+        finalAttack: finalAttack
+    };
+}
+
 function generateAllies() {
     allies = [];
     allyTemplates.forEach(template => {
@@ -213,12 +228,17 @@ function attackSelectedTarget() {
     }
 
     let restBonus = player.restBonus || 0;
-    let chance = calcHit(player, target) + restBonus;
+    let chance = calcHit(player, target) + restBonus + (player.aimBonus || 0);
 
     if (isHit(chance)) {
-        let dmg = dealDamage(14, 24);
-        target.hp -= dmg;
-        write(`你命中 ${target.name}，造成 ${dmg}`);
+        let result = calcDamage(player, target);
+        target.hp -= result.damage;
+
+        if (result.variance >= 0.2) {
+            write(`命中弱點！你命中 ${target.name}，造成 ${result.damage}`);
+        } else {
+            write(`你命中 ${target.name}，造成 ${result.damage}`);
+        }
     } else {
         write("未命中");
     }
@@ -226,6 +246,8 @@ function attackSelectedTarget() {
     if (player.restBonus) {
         player.restBonus = Math.max(0, player.restBonus - 10);
     }
+    player.aimBonus = 0;
+    player.varianceBonus = 0;
 
     updateUI();
 
@@ -250,9 +272,9 @@ function alliesTurn() {
 
         let chance = calcHit(unit, target);
         if (isHit(chance)) {
-            let dmg = dealDamage(8, 16);
-            target.hp -= dmg;
-            write(`${unit.name} 命中 ${target.name} (${dmg})`);
+            let result = calcDamage(unit, target);
+            target.hp -= result.damage;
+            write(`${unit.name} 命中 ${target.name} (${result.damage})`);
         } else {
             write(`${unit.name} 未命中`);
         }
@@ -268,9 +290,9 @@ function enemyTurn() {
 
         let chance = calcHit(enemy, target);
         if (isHit(chance)) {
-            let dmg = dealDamage(10, 20);
-            target.hp -= dmg;
-            write(`${enemy.name} 命中 ${target.name} (${dmg})`);
+            let result = calcDamage(enemy, target);
+            target.hp -= result.damage;
+            write(`${enemy.name} 命中 ${target.name} (${result.damage})`);
         } else {
             write(`${enemy.name} 未命中`);
         }
@@ -303,6 +325,13 @@ function restPilot() {
     player.restBonus = 50;
     player.state = "休息後狀態穩定";
     write("休息完成：首回合+50%，每回合-10%。");
+    updateUI();
+}
+
+function observe() {
+    player.aimBonus = 15;
+    player.varianceBonus = 0.2;
+    write("你觀察敵人，找到弱點。下一擊命中率提高，並更容易打出高傷害。");
     updateUI();
 }
 
