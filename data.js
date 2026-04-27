@@ -182,13 +182,3 @@ const equipmentPool = [
         }
     }
 ];
-
-let player = {};
-let roster = [];
-let allies = [];
-let enemies = [];
-let inventory = [];
-let availableRecruits = [];
-let battleOver = false;
-let turn = 1;
-let resources = 50;
