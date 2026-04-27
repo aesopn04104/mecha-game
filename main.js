@@ -27,6 +27,24 @@ function generateAllies() {
     });
 }
 
+function healAlliesAfterBattle() {
+    let healAmount = 30;
+
+    allies.forEach(ally => {
+        if (ally.hp <= 0) {
+            ally.state = "重創待修";
+            return;
+        }
+
+        let beforeHp = ally.hp;
+        ally.hp = Math.min(ally.maxHp, ally.hp + healAmount);
+
+        if (ally.hp > beforeHp) {
+            write(`${ally.name} 完成臨時維修，HP 從 ${beforeHp} 回復到 ${ally.hp}。`);
+        }
+    });
+}
+
 function generateEnemies() {
     enemies = [];
     let baseCount = allies.length + 1;
@@ -150,6 +168,7 @@ function checkBattleEnd() {
         write("敵方全滅。");
         write(`獲得資源 ${reward}`);
         dropEquipment();
+        healAlliesAfterBattle();
         enterBase();
         updateUI();
         return true;
@@ -260,7 +279,9 @@ function enemyTurn() {
 
 function goToBase() {
     battleOver = true;
+    healAlliesAfterBattle();
     enterBase();
+    updateUI();
 }
 
 function repairMech() {
