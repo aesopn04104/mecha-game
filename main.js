@@ -13,8 +13,8 @@ function generateAllies() {
 
 function generateEnemies() {
     enemies = [];
-    let baseCount = allies.length + 1; // 玩家+隊友
-    let variation = Math.floor(Math.random() * 5) - 2; // -2~+2
+    let baseCount = allies.length + 1;
+    let variation = Math.floor(Math.random() * 5) - 2;
     let count = Math.max(1, baseCount + variation);
 
     for (let i = 0; i < count; i++) {
@@ -41,7 +41,6 @@ function restartGame() {
     write("戰鬥開始。");
 
     updateUI();
-    setActionButtons(false);
 }
 
 function write(text) {
@@ -57,10 +56,35 @@ function getAliveAllies() {
     return [player, ...allies].filter(a => a.hp > 0);
 }
 
+function renderAllyStatus() {
+    const el = document.getElementById("allyStatus");
+    el.innerHTML = "";
+
+    [player, ...allies].forEach(unit => {
+        let div = document.createElement("div");
+        div.innerText = `${unit.name} | HP: ${Math.max(unit.hp,0)}/${unit.maxHp}`;
+        el.appendChild(div);
+    });
+}
+
+function renderEnemyStatus() {
+    const el = document.getElementById("enemyStatus");
+    el.innerHTML = "";
+
+    enemies.forEach(enemy => {
+        let div = document.createElement("div");
+        div.innerText = `${enemy.name} | HP: ${Math.max(enemy.hp,0)}/${enemy.maxHp}`;
+        el.appendChild(div);
+    });
+}
+
 function updateUI() {
     document.getElementById("playerHp").innerText = `${Math.max(player.hp, 0)} / ${player.maxHp}`;
     document.getElementById("playerState").innerText = player.state;
     document.getElementById("resources").innerText = resources;
+
+    renderAllyStatus();
+    renderEnemyStatus();
 }
 
 function checkBattleEnd() {
