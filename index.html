@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>Mecha Game</title>
-<link rel="stylesheet" href="style.css?v=20260427-4">
+<link rel="stylesheet" href="style.css?v=20260427-5">
 </head>
 <body>
 
@@ -36,6 +36,11 @@
   <div id="inventoryList"></div>
 </div>
 
+<div id="recruitPanel" class="unit" style="display:none;">
+  <h2>招募隊友</h2>
+  <div id="recruitList"></div>
+</div>
+
 <div id="log"></div>
 
 <div id="actions">
@@ -52,12 +57,13 @@
 <button onclick="restPilot()">休息</button>
 <button onclick="talkToNpc()">與三號交流</button>
 <button onclick="toggleEquipmentPanel()">裝備管理</button>
+<button onclick="toggleRecruitPanel()">招募隊友</button>
 <button onclick="startNextMission()">出擊</button>
 </div>
 
-<script src="data.js?v=20260427-4"></script>
-<script src="combat.js?v=20260427-4"></script>
-<script src="main.js?v=20260427-4"></script>
+<script src="data.js?v=20260427-5"></script>
+<script src="combat.js?v=20260427-5"></script>
+<script src="main.js?v=20260427-5"></script>
 
 </body>
 </html>
