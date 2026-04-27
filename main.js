@@ -9,7 +9,6 @@ let availableRecruits = [];
 let battleOver = false;
 let resources = 0;
 
-// === 基礎 ===
 function clone(obj) {
     return JSON.parse(JSON.stringify(obj));
 }
@@ -21,7 +20,6 @@ function setupBaseStats(unit) {
     unit.baseEvasion = unit.evasion || 0;
 }
 
-// === 隊友 ===
 function generateAllies() {
     roster = [];
     allies = [];
@@ -41,10 +39,14 @@ function generateAllies() {
     });
 }
 
-// === 敵人 ===
+// ⭐ 修正敵人數量：小隊+2
 function generateEnemies() {
     enemies = [];
-    let count = Math.floor(Math.random() * 7) + 1;
+
+    let teamSize = allies.length + 1;
+    let maxEnemies = teamSize + 2;
+
+    let count = Math.floor(Math.random() * maxEnemies) + 1;
 
     for (let i = 0; i < count; i++) {
         let enemy = clone(defaultEnemy);
@@ -55,14 +57,13 @@ function generateEnemies() {
     }
 }
 
-// === UI ===
 function renderAllyStatus() {
     const el = document.getElementById("allyStatus");
     el.innerHTML = `上陣：${allies.length}/4<br>`;
 
     [player, ...allies].forEach(unit => {
         let div = document.createElement("div");
-        div.innerText = `${unit.name} HP:${unit.hp}/${unit.maxHp}`;
+        div.innerText = `${unit.name} HP:${Math.max(0, unit.hp)}/${unit.maxHp}`;
         el.appendChild(div);
     });
 }
@@ -73,7 +74,7 @@ function renderEnemyStatus() {
 
     enemies.forEach(enemy => {
         let div = document.createElement("div");
-        div.innerText = `${enemy.name} HP:${enemy.hp}/${enemy.maxHp}`;
+        div.innerText = `${enemy.name} HP:${Math.max(0, enemy.hp)}/${enemy.maxHp}`;
         el.appendChild(div);
     });
 }
@@ -92,7 +93,7 @@ function updateTargetUI() {
 
 function updateUI() {
     document.getElementById("playerHp").innerText =
-        `${player.hp}/${player.maxHp}`;
+        `${Math.max(0, player.hp)}/${player.maxHp}`;
 
     document.getElementById("resources").innerText = resources;
 
@@ -101,7 +102,6 @@ function updateUI() {
     updateTargetUI();
 }
 
-// === 戰鬥 ===
 function attackSelectedTarget() {
     if (battleOver) return;
 
@@ -122,25 +122,28 @@ function attackSelectedTarget() {
     updateUI();
 }
 
+// ⭐ 修正AI：隨機打全隊
 function enemyTurn() {
+    let targets = [player, ...allies].filter(u => u.hp > 0);
+
     enemies.forEach(enemy => {
         if (enemy.hp <= 0) return;
 
-        let dmg = Math.max(0, enemy.attack - player.defense);
-        player.hp -= dmg;
+        let target = targets[Math.floor(Math.random() * targets.length)];
 
-        write(`${enemy.name} 攻擊你 (${dmg})`);
+        let dmg = Math.max(0, enemy.attack - target.defense);
+        target.hp -= dmg;
+
+        write(`${enemy.name} 攻擊 ${target.name} (${dmg})`);
     });
 }
 
-// === 招募（保留）===
 function toggleRecruitPanel() {
     const panel = document.getElementById("recruitPanel");
     panel.style.display =
         panel.style.display === "none" ? "block" : "none";
 }
 
-// === 其他 ===
 function write(text) {
     log.innerText += text + "\n";
 }
