@@ -24,6 +24,18 @@ function generateEnemies() {
     }
 }
 
+function updateTargetUI() {
+    const select = document.getElementById("targetSelect");
+    select.innerHTML = "";
+
+    getAliveEnemies().forEach((enemy, index) => {
+        let option = document.createElement("option");
+        option.value = index;
+        option.text = `${enemy.name} (${enemy.hp}/${enemy.maxHp})`;
+        select.appendChild(option);
+    });
+}
+
 function restartGame() {
     player = clone(defaultPlayer);
     generateAllies();
@@ -85,40 +97,18 @@ function updateUI() {
 
     renderAllyStatus();
     renderEnemyStatus();
+    updateTargetUI();
 }
 
-function checkBattleEnd() {
-    if (getAliveEnemies().length === 0) {
-        battleOver = true;
-        let reward = 30 + enemies.length * 5;
-        resources += reward;
-
-        write("敵方全滅。");
-        write(`獲得資源 ${reward}`);
-        enterBase();
-        return true;
-    }
-
-    if (player.hp <= 0) {
-        battleOver = true;
-        write("你被擊敗。");
-        return true;
-    }
-
-    return false;
-}
-
-function attack() {
+function attackSelectedTarget() {
     if (battleOver) return;
 
-    let target = getAliveEnemies()[0];
+    const index = document.getElementById("targetSelect").value;
+    const target = getAliveEnemies()[index];
+    if (!target) return;
 
     let restBonus = player.restBonus || 0;
     let chance = calcHit(player, target) + restBonus;
-
-    if (restBonus > 0) {
-        write(`休息加成 ${restBonus}%`);
-    }
 
     if (isHit(chance)) {
         let dmg = dealDamage(14, 24);
