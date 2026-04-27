@@ -135,7 +135,9 @@ function repairMech() {
 
 function restPilot() {
     player.rested = true;
+    player.state = "休息後狀態穩定";
     write("你休息了一會");
+    updateUI();
 }
 
 function enterBase() {
