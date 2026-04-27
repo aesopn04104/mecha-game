@@ -134,9 +134,7 @@ function repairAlliesFromPlayerRepair(playerRepairAmount) {
 
 function generateEnemies() {
     enemies = [];
-    let baseCount = allies.length + 1;
-    let variation = Math.floor(Math.random() * 5) - 2;
-    let count = Math.max(1, baseCount + variation);
+    let count = Math.floor(Math.random() * 7) + 1; // 固定 1~7 隨機，不再跟小隊人數掛鉤
 
     for (let i = 0; i < count; i++) {
         let enemy = clone(defaultEnemy);
